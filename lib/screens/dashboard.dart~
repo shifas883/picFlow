@@ -21,6 +21,8 @@ int _currentIndex = 0;
   // }
 final List<Widget> _pages = [
   HomeScreen(),
+  HomeScreen(),
+  HomeScreen(),
   // ProfileScreen(),
 ];
 
@@ -77,7 +79,7 @@ final List<Widget> _pages = [
             unselectedIcon: Icons.plumbing,
             selectedColor: Colors.white,
           ),
-          
+
         ],
       ),
     );

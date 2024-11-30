@@ -7,7 +7,7 @@ void main() {
 
   runApp(MultiProvider(
       providers: [
-        ChangeNotifierProvider<ImageListProvider>( // Updated to ImageListProvider
+        ChangeNotifierProvider<ImageListProvider>(
           create: (_) => ImageListProvider(),
         ),
       ],

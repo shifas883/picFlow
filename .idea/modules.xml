@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/pinterest_clone.iml" filepath="$PROJECT_DIR$/pinterest_clone.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/pinterest_clone_android.iml" filepath="$PROJECT_DIR$/android/pinterest_clone_android.iml" />
     </modules>
   </component>
 </project>

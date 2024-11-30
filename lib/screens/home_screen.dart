@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with buttons
+
           Container(
             color: Colors.black,
             child: Padding(
@@ -181,13 +181,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
-      // Download the image
       var response = await Dio().get(
         imageUrl,
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // Save the image
       final imageName = imageUrl.split('/').last;
       final result = await SaverGallery.saveImage(
         Uint8List.fromList(response.data),
@@ -197,12 +195,10 @@ class _HomeScreenState extends State<HomeScreen> {
         skipIfExists: false,
       );
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Image saved to gallery")),
       );
     } catch (e) {
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error saving image: $e")),
       );
@@ -211,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<bool> _checkAndRequestPermissions({required bool skipIfExists}) async {
     if (!Platform.isAndroid && !Platform.isIOS) {
-      return false; // Only Android and iOS platforms are supported
+      return false;
     }
 
     if (Platform.isAndroid) {
@@ -219,21 +215,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final sdkInt = deviceInfo.version.sdkInt;
 
       if (skipIfExists) {
-        // Read permission is required to check if the file already exists
         return sdkInt >= 33
             ? await Permission.photos.request().isGranted
             : await Permission.storage.request().isGranted;
       } else {
-        // No read permission required for Android SDK 29 and above
         return sdkInt >= 29 ? true : await Permission.storage.request().isGranted;
       }
     } else if (Platform.isIOS) {
-      // iOS permission for saving images to the gallery
       return skipIfExists
           ? await Permission.photos.request().isGranted
           : await Permission.photosAddOnly.request().isGranted;
     }
 
-    return false; // Unsupported platforms
+    return false;
   }
 }
