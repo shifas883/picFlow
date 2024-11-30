@@ -1,0 +1,4 @@
+#Sat Nov 30 21:29:39 IST 2024
+base.0=C\:\\Users\\lenovo\\AndroidStudioProjects\\pinterest_clone\\build\\app\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

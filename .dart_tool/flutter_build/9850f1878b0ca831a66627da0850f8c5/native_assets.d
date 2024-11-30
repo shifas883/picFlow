@@ -1,0 +1,1 @@
+ C:\\Users\\lenovo\\AndroidStudioProjects\\pinterest_clone\\.dart_tool\\flutter_build\\9850f1878b0ca831a66627da0850f8c5\\native_assets.yaml: 
