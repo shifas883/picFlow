@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 
 class HomeScreen extends StatefulWidget {
-
   HomeScreen({super.key});
 
   @override
@@ -20,20 +19,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late List<ImageModel> _imageList;
+  late List<double> _heights;
+
   @override
   void initState() {
     super.initState();
     _checkAndRequestPermissions(skipIfExists: false);
-    Provider.of<ImageListProvider>(context, listen: false).fetchImages();
+    final provider = Provider.of<ImageListProvider>(context, listen: false);
+    provider.fetchImages().then((_) {
+      setState(() {
+        _imageList = provider.images;
+        _heights = List.generate(
+            _imageList.length, (index) => 150 + (index % 5) * 30.0);
+      });
+    });
   }
-  final List<double> heights = [
-    150, 200, 250, 300, 180, 240, 170, 220, 150,200,
-    150, 200, 250, 300, 180, 240, 170, 220, 150,200,
-    150, 200, 250, 300, 180, 240, 170, 220, 150,200];
 
   @override
   Widget build(BuildContext context) {
     final imageProvider = Provider.of<ImageListProvider>(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -50,10 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.red,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Text('Follow',
-            style: GoogleFonts.roboto(
-              color: Colors.white
-            ),),
+            child: Text(
+              'Follow',
+              style: GoogleFonts.roboto(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -62,46 +68,36 @@ class _HomeScreenState extends State<HomeScreen> {
           : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          Container(
-            color: Colors.black,
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildTabButton('Activity', isSelected: false),
-                  _buildTabButton('Community', isSelected: false),
-                  _buildTabButton('Shop', isSelected: true),
-                ],
-              ),
-            ),
-          ),
-
+          _buildTabBar(),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'All Images(${imageProvider.images.length})',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'All Images(${_imageList.length})',
+              style:
+              TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final double itemWidth =
-                      (constraints.maxWidth - 16) / 2; // 2 columns
-                  return ListView(
-                    padding: const EdgeInsets.all(8.0),
-                    children: _buildStaggeredGrid(itemWidth, imageProvider.images),
-                  );
-                },
-              ),
-            ),
+            child: _buildReorderableStaggeredList(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      color: Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildTabButton('Activity', isSelected: false),
+            _buildTabButton('Community', isSelected: false),
+            _buildTabButton('Shop', isSelected: true),
+          ],
+        ),
       ),
     );
   }
@@ -122,56 +118,51 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<Widget> _buildStaggeredGrid(double itemWidth, List<ImageModel>? images) {
-    List<Widget> column1 = [];
-    List<Widget> column2 = [];
-    bool addToLeft = true;
+  Widget _buildReorderableStaggeredList() {
+    return ReorderableListView(
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (newIndex > oldIndex) {
+            newIndex -= 1;
+          }
+          final item = _imageList.removeAt(oldIndex);
+          final height = _heights.removeAt(oldIndex);
+          _imageList.insert(newIndex, item);
+          _heights.insert(newIndex, height);
+        });
+      },
+      padding: const EdgeInsets.all(8.0),
+      children: List.generate(_imageList.length, (index) {
+        return _buildStaggeredItem(index);
+      }),
+    );
+  }
 
-    for (int i = 0; i < images!.length; i++) {
-      final imageUrl = images[i].downloadUrl ??
-          'https://images.pexels.com/photos/60597/dahlia-red-blossom-bloom-60597.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+  Widget _buildStaggeredItem(int index) {
+    final imageUrl = _imageList[index].downloadUrl ??
+        'https://images.pexels.com/photos/60597/dahlia-red-blossom-bloom-60597.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
 
-      final item = GestureDetector(
-        onTap: () => _saveImageToGallery(imageUrl),
-        child: Container(
-          width: itemWidth,
-          height: heights[i],
-          margin: const EdgeInsets.only(bottom: 8.0),
-          decoration: BoxDecoration(
-            // color: Colors.primaries[i % Colors.primaries.length],
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            image: DecorationImage(
-              image: NetworkImage(imageUrl),
-              fit: BoxFit.cover,
-            ),
+    return GestureDetector(
+      key: ValueKey(_imageList[index]),
+      onTap: () => _saveImageToGallery(imageUrl),
+      child: Container(
+        height: _heights[index],
+        margin: const EdgeInsets.only(bottom: 8.0),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+          image: DecorationImage(
+            image: NetworkImage(imageUrl),
+            fit: BoxFit.cover,
           ),
         ),
-      );
-
-      if (addToLeft) {
-        column1.add(item);
-      } else {
-        column2.add(item);
-      }
-      addToLeft = !addToLeft;
-    }
-
-    return [
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: Column(children: column1)),
-          const SizedBox(width: 8),
-          Expanded(child: Column(children: column2)),
-        ],
       ),
-    ];
+    );
   }
 
   Future<void> _saveImageToGallery(String imageUrl) async {
-    // Check and request permissions
-    bool permissionGranted = await _checkAndRequestPermissions(skipIfExists: false);
+    bool permissionGranted =
+    await _checkAndRequestPermissions(skipIfExists: false);
 
     if (!permissionGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       final imageName = imageUrl.split('/').last;
-      final result = await SaverGallery.saveImage(
+      await SaverGallery.saveImage(
         Uint8List.fromList(response.data),
         quality: 80,
         fileName: imageName,
@@ -214,17 +205,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final deviceInfo = await DeviceInfoPlugin().androidInfo;
       final sdkInt = deviceInfo.version.sdkInt;
 
-      if (skipIfExists) {
-        return sdkInt >= 33
-            ? await Permission.photos.request().isGranted
-            : await Permission.storage.request().isGranted;
-      } else {
-        return sdkInt >= 29 ? true : await Permission.storage.request().isGranted;
-      }
+      return sdkInt >= 29 ? true : await Permission.storage.request().isGranted;
     } else if (Platform.isIOS) {
-      return skipIfExists
-          ? await Permission.photos.request().isGranted
-          : await Permission.photosAddOnly.request().isGranted;
+      return await Permission.photosAddOnly.request().isGranted;
     }
 
     return false;
